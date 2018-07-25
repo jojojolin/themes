@@ -1,0 +1,72 @@
+{% extends 'award.html' %}
+
+
+{% block css %}
+    <link rel=stylesheet type=text/css href="{{ theme_static('css/style.css') }}">
+    <link rel=stylesheet type=text/css href="{{ theme_static('css/awards.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel=stylesheet type=text/css href="{{ theme_static('css/agency.min.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ theme_static('css/component.css') }}" />
+    <script src="{{ theme_static('js/modernizr.custom.js') }}"></script>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ theme_static('js/classie.js') }}"></script>
+<script src="{{ theme_static('js/uiProgressButton.js') }}"></script>
+<script>
+//    [].slice.call( document.querySelectorAll( '.progress-button' ) ).forEach( function( bttn, pos ) {
+//        new UIProgressButton( bttn, {
+//            callback : function( instance ) {
+//                var progress = 0,
+//                    interval = setInterval( function() {
+//                        progress = Math.min( progress + Math.random() * 0.1, 1 );
+//                        instance.setProgress( progress );
+//
+//                        if( progress === 1 ) {
+//                            instance.stop( pos === 1 || pos === 3 ? -1 : 1 );
+//                            clearInterval( interval );
+//                        }
+//                    }, 450 );//150
+//            }
+//        } );
+//    } );
+    $(document).ready(function () {
+        var btn = document.getElementById("verify-button");
+        new UIProgressButton(btn, {
+            callback:function(instance){
+                var progress = 0;
+                hidefields(["#not-verified", "#verified"]);
+                $("#progress-msg").html("");
+                var data = $("#verify-button").attr('value');
+                var uid = JSON.parse(data.replace(/'/g, '"')).uid;
+                $.get("/verify/" + uid, function (res) {
+                    res = JSON.parse(res);
+                    $("#progress-msg").show();
+                    if (res == null) {
+                        $("#progress-msg").html($("#progress-msg").html() + "Oops! There was an issue connecting to the Blockchain.info API")
+                    }
+                    else {
+                        console.log("res.length: "+res.length);
+//                        let increment = 1/res.length;
+                    (async()=>{
+                        for (i = 0; i < res.length; i++) {
+//                            progress +=increment;
+//                            (async()=>{
+                                instance.setProgress(progress=await renderResponse(i, res.length, res[i]));
+                                console.log(progress);
+//                            })();
+                        }
+                        if( progress > 0.9 ) {
+                            instance.stop(1);
+                            progress = 0;
+                            console.log("ended!");
+                        }
+                         })();
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
